@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Split a sign that is bigger than your laser bed into pieces that lock together. Puzzle, dovetail, heart, butterfly key and more. An open-source package by MyLaserTools. Runs in your browser."
+    />
+    <title>Laser Split</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23221c16'/%3E%3Cpath fill='%23efd3a6' d='M6 8h9v6.2a2.6 2.6 0 1 1 0 3.6V24H6z'/%3E%3Cpath fill='%23d4572a' d='M17 8h9v16h-9v-6.2a2.6 2.6 0 1 0 0-3.6z'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>laser-split</a>
+      <nav>
+        <a href="https://github.com/mylasertools-com/laser-split">GitHub ↗</a
+        ><a href="https://www.npmjs.com/package/@mylasertools/laser-split">npm ↗</a
+        ><a href="https://mylasertools.com">MyLaserTools ↗</a>
+      </nav>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <div class="eyebrow"><span></span> BIG SIGNS ON A SMALL LASER</div>
+          <h1>Make it bigger<br /><em>than your laser.</em></h1>
+          <p>
+            A one metre sign on a 12 × 20 inch bed. Drop in your design, pick a joint, and get sheet
+            files with pieces that lock together. Seams steer around your artwork, and you can drag
+            them anywhere.
+          </p>
+        </div>
+        <div class="package">
+          <span class="package-label">TYPESCRIPT · CLI · WEB COMPONENT</span
+          ><code>npm i @mylasertools/laser-split</code>
+          <div><span>Runs locally</span><span>No account</span><span>MIT</span></div>
+        </div>
+      </section>
+
+      <laser-split id="splitter" width="1000" bed="12x20in" joint="puzzle"></laser-split>
+
+      <section class="docs">
+        <article>
+          <h2>Embed it in your site</h2>
+          <p>
+            One script tag and one element. It works in any page or framework, follows your colours
+            through CSS variables, and fires events so your shop or editor can take the files.
+          </p>
+          <pre><code>&lt;script type="module"
+  src="https://cdn.jsdelivr.net/npm/@mylasertools/laser-split/dist/element.js"&gt;&lt;/script&gt;
+
+&lt;laser-split width="1000" bed="12x20in" joint="heart"
+  hide="bed" style="--ls-accent:#0b7a5c"&gt;&lt;/laser-split&gt;</code></pre>
+        </article>
+        <article>
+          <h2>Or use the library</h2>
+          <p>
+            The same engine without the interface, for Node, workers and your own tools. Every sheet
+            is a plain SVG: red cuts, artwork in its own colours, blue labels.
+          </p>
+          <pre><code>import { splitSvg } from '@mylasertools/laser-split';
+
+const { sheets, assembly, issues } = splitSvg(svg, {
+  width: 1000,
+  bed: '12x20in',
+  joint: 'dovetail',
+  kerf: 0.15,
+});</code></pre>
+        </article>
+      </section>
+    </main>
+    <footer>
+      An open-source tool by <a href="https://mylasertools.com">MyLaserTools</a>. Your files never
+      leave this page.
+    </footer>
+    <script type="module">
+      import '../dist/element.js';
+      const el = document.getElementById('splitter');
+      el.samples = [
+        {
+          name: 'Welcome sign',
+          svg: '../examples/welcome.svg',
+          options: { width: 1000, joint: 'puzzle' },
+        },
+        {
+          name: 'Mountains',
+          svg: '../examples/mountains.svg',
+          options: { width: 1000, joint: 'dovetail' },
+        },
+        {
+          name: 'Dream big cloud',
+          svg: '../examples/cloud.svg',
+          options: { width: 1000, joint: 'heart' },
+        },
+      ];
+      const first = new URLSearchParams(location.search).get('sample') ?? '0';
+      el.shadowRoot?.querySelector(`[data-sample="${first}"]`)?.click();
+    </script>
+  </body>
+</html>
