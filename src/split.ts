@@ -92,7 +92,10 @@ export function settings(options: SplitOptions): Settings {
   const kerf = num(options.kerf, 'kerf', 0, 2, 0.15),
     clearance = num(options.clearance, 'clearance', 0, 2, 0.1),
     delta = (kerf - clearance) / 2;
-  const depth = size * joint.aspect;
+  const depth =
+    joint.kind === 'none'
+      ? 0
+      : num(options.jointDepth, 'jointDepth', 2, usable / 2, size * joint.aspect);
   const reach =
     (joint.kind === 'tab' ? depth : joint.kind === 'edge' ? depth / 2 : 0) +
     Math.max(0, delta) +
@@ -262,6 +265,26 @@ function seamLimits(seams: number[], length: number, lim: Limits): Array<[number
   });
 }
 
+/** Intervals with the blocked ranges removed. */
+function without(
+  runs: Array<[number, number]>,
+  blocked: Array<[number, number]>,
+): Array<[number, number]> {
+  const cuts = [...blocked].sort((p, q) => p[0] - q[0]);
+  const out: Array<[number, number]> = [];
+  for (const [a, b] of runs) {
+    let lo = a;
+    for (const [p, q] of cuts) {
+      if (q <= lo || p >= b) continue;
+      if (p > lo) out.push([lo, p]);
+      lo = Math.max(lo, q);
+      if (lo >= b) break;
+    }
+    if (lo < b) out.push([lo, b]);
+  }
+  return out;
+}
+
 interface Feature {
   u: number;
   points: Array<[number, number]>;
@@ -391,17 +414,27 @@ function buildSeam(
       }
     } else if (joint.kind === 'edge') {
       const h = s.depth / 2,
-        e = 1.5;
+        e = 1.5,
+        rows = Math.max(4, Math.ceil((2 * (h + e)) / 1.5)),
+        vs = Array.from({ length: rows + 1 }, (_, i) => -h - e + (2 * (h + e) * i) / rows);
       let ok = runs;
-      for (const v of [-h - e, -h / 2, h / 2, h + e])
-        ok = overlap(ok, spans(material, axis, at + v));
+      for (const v of vs) ok = overlap(ok, spans(material, axis, at + v));
+      if (ink.length) {
+        const blocked: Array<[number, number]> = [];
+        for (const v of vs)
+          for (const [p, q] of spans(ink, axis, at + v)) blocked.push([p - 2, q + 2]);
+        ok = without(ok, blocked);
+      }
+      const minRun = s.size * 0.75;
+      const placedRuns: Array<[number, number]> = [];
       for (const [a0, b0] of ok) {
         const m = Math.max(WALL_MIN, s.size * 0.25),
           a = a0 + m,
           b = b0 - m;
-        if (b - a < s.size * 0.75) continue;
+        if (b - a < minRun) continue;
         if (!fits(a, b, -h - e, h + e)) continue;
         if (!clean(a, b, -h - e, h + e)) continue;
+        placedRuns.push([a, b]);
         features.push({
           u: a,
           points: edgeProfile(joint.id, b - a, s.size, s.depth).map(([pu, pv]) => [
@@ -421,10 +454,10 @@ function buildSeam(
         side = side === 1 ? -1 : 1;
       }
       for (const [a, b] of runs)
-        if (b - a >= 2 && !ok.some(([p, q]) => q > a && p < b && q - p >= s.size * 0.75 + 6))
+        if (b - a >= 2 && !placedRuns.some(([p, q]) => q > a && p < b))
           issues.push({
             code: 'NO_JOINT',
-            message: `A ${(b - a).toFixed(0)} mm crossing is too narrow for the edge pattern and stays straight.`,
+            message: `A ${(b - a).toFixed(0)} mm crossing has no clear room for the edge pattern and stays straight. Glue it or add backer strips.`,
             at: world((a + b) / 2, 0),
           });
     }

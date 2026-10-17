@@ -68,6 +68,11 @@ export interface SplitOptions {
   joint?: JointType;
   /** Joint width along the seam in mm. Default 14% of the shorter usable bed side, 12 to 70 mm. */
   jointSize?: number;
+  /**
+   * How far a joint reaches into the neighbouring piece, in mm. Default jointSize times the
+   * joint's natural proportion, so a wider joint gets deeper unless this is set.
+   */
+  jointDepth?: number;
   /** Target distance between joints on one crossing, in mm. Default 4 x jointSize. */
   jointSpacing?: number;
   /** Full beam width in mm. Default 0.15. */

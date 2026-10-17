@@ -14,6 +14,7 @@ Options:
   -b, --bed <size>         Bed preset or WxH in mm or in, e.g. 12x20in, 400x400 (default 12x20in)
   -j, --joint <type>       ${JOINTS.map((j) => j.id).join(', ')} (default puzzle)
   -s, --joint-size <mm>    Joint width along the seam
+  -d, --joint-depth <mm>   How far a joint reaches into the next piece
       --spacing <mm>       Target distance between joints on one crossing
       --kerf <mm>          Full beam width (default 0.15)
       --clearance <mm>     Total gap between mating edges (default 0.1)
@@ -63,6 +64,7 @@ function main(argv: string[]): number {
     else if (a === '-b' || a === '--bed') options.bed = value(a);
     else if (a === '-j' || a === '--joint') options.joint = value(a) as JointType;
     else if (a === '-s' || a === '--joint-size') options.jointSize = num(a);
+    else if (a === '-d' || a === '--joint-depth') options.jointDepth = num(a);
     else if (a === '--spacing') options.jointSpacing = num(a);
     else if (a === '--kerf') options.kerf = num(a);
     else if (a === '--clearance') options.clearance = num(a);

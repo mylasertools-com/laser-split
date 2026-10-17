@@ -5,6 +5,8 @@
 First release.
 
 - `splitSvg` and `splitPolygons`: fewest pieces that fit the bed, seam placement that avoids slivers and artwork, kerf and clearance compensation, sheet packing with rotation, and an assembly map.
+- Joint width and depth set separately, so star, arrow and other joints can widen without reaching further into the piece.
+- Edge patterns (wave, zigzag, finger, scallop) run along every seam and stop only where they would cut through artwork.
 - Eleven joints: puzzle, dovetail, heart, arrow, star, butterfly key, wave, zigzag, finger, scallop and straight, plus optional backer strips.
 - Joints checked across their full footprint, moved or flipped away from engraved artwork.
 - Piece labels in a built-in single-line font on their own layer.

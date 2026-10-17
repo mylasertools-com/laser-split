@@ -71,7 +71,7 @@ npx @mylasertools/laser-split sign.svg --width 1000 --bed 12x20in --joint heart
 
 ![The laser-split web component with a cloud sign split into eight heart-jointed pieces.](https://raw.githubusercontent.com/mylasertools-com/laser-split/main/docs/assets/workbench.png)
 
-**Attributes:** `src` (an SVG URL to load), `width` (mm), `unit` (`mm`, `cm` or `in`), `bed` (a preset id or `WxH` such as `600x400` or `24x12in`), `joint`, `joint-size`, `kerf`, `clearance`, `margin`, `backers`, `labels="off"`, `filename`, `theme` (`light` or `dark`), and `hide` with any of `upload size bed joint fit download` to lock parts of the interface.
+**Attributes:** `src` (an SVG URL to load), `width` (mm), `unit` (`mm`, `cm` or `in`), `bed` (a preset id or `WxH` such as `600x400` or `24x12in`), `joint`, `joint-size`, `joint-depth`, `kerf`, `clearance`, `margin`, `backers`, `labels="off"`, `filename`, `theme` (`light` or `dark`), and `hide` with any of `upload size bed joint fit download` to lock parts of the interface.
 
 **Properties and methods:** `el.svg = markup`, `el.samples = [{ name, svg, options }]`, `el.load(urlOrMarkup)`, `el.split()`, `el.result`, `el.options`, `el.files()`, `el.download('all' | index | 'assembly')`.
 
@@ -119,6 +119,7 @@ Every sheet is a plain SVG at the bed's physical size:
 | `rotate`       | `boolean`                   | `true`          | Allow parts to turn 90° on the sheet                    |
 | `joint`        | `JointType`                 | `'puzzle'`      | See [Joints](#joints)                                   |
 | `jointSize`    | `number`                    | 14% of the bed  | Joint width along the seam in mm, 12 to 70 by default   |
+| `jointDepth`   | `number`                    | from the width  | How far a joint reaches into the next piece, in mm      |
 | `jointSpacing` | `number`                    | `4 × jointSize` | Target distance between joints on one crossing          |
 | `kerf`         | `number`                    | `0.15`          | Full beam width in mm                                   |
 | `clearance`    | `number`                    | `0.1`           | Total gap between mating edges after cutting            |

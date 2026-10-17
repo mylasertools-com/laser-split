@@ -134,6 +134,7 @@ export class LaserSplitElement extends Base {
       'bed',
       'joint',
       'joint-size',
+      'joint-depth',
       'kerf',
       'clearance',
       'margin',
@@ -162,6 +163,7 @@ export class LaserSplitElement extends Base {
     bedH: 304.8,
     joint: 'puzzle' as JointType,
     jointSize: 0,
+    jointDepth: 0,
     kerf: 0.15,
     clearance: 0.1,
     margin: 5,
@@ -224,6 +226,7 @@ export class LaserSplitElement extends Base {
       bed: { width: s.bedW, height: s.bedH },
       joint: s.joint,
       jointSize: s.jointSize || undefined,
+      jointDepth: s.jointDepth || undefined,
       kerf: s.kerf,
       clearance: s.clearance,
       margin: s.margin,
@@ -357,6 +360,7 @@ export class LaserSplitElement extends Base {
     const joint = this.getAttribute('joint') as JointType | null;
     if (joint && JOINTS.some((j) => j.id === joint)) s.joint = joint;
     s.jointSize = num(this.getAttribute('joint-size'), s.jointSize);
+    s.jointDepth = num(this.getAttribute('joint-depth'), s.jointDepth);
     s.kerf = num(this.getAttribute('kerf'), s.kerf);
     s.clearance = num(this.getAttribute('clearance'), s.clearance);
     s.margin = num(this.getAttribute('margin'), s.margin);
@@ -438,7 +442,8 @@ export class LaserSplitElement extends Base {
       <h3>Joint</h3>
       <div class="joints">${jointButtons}</div>
       <p class="hint" data-out="joint"></p>
-      <label class="f" style="margin-top:8px">Joint size <span data-out="size"></span><input type="range" name="jointSize" min="8" max="90" step="1"></label>
+      <label class="f" style="margin-top:8px"><span>Width <span data-out="size"></span></span><input type="range" name="jointSize" min="8" max="120" step="1"></label>
+      <label class="f" style="margin-top:8px"><span>Depth <span data-out="depth"></span></span><input type="range" name="jointDepth" min="3" max="60" step="1"></label>
     </section>
     <section class="card" ${this.isHidden('fit') ? 'hidden' : ''}>
       <details>
@@ -508,6 +513,7 @@ export class LaserSplitElement extends Base {
     r.querySelectorAll<HTMLButtonElement>('[data-joint]').forEach((b) =>
       b.addEventListener('click', () => {
         this.state.joint = b.dataset.joint as JointType;
+        this.state.jointDepth = 0;
         this.manualSeams = undefined;
         this.syncControls();
         this.schedule(true, 0);
@@ -542,7 +548,11 @@ export class LaserSplitElement extends Base {
     onNum('bedW', (v) => v >= 20 && (s.bedW = v * UNIT[s.unit]));
     onNum('bedH', (v) => v >= 20 && (s.bedH = v * UNIT[s.unit]));
     onNum('margin', (v) => (s.margin = Math.max(0, v)));
-    onNum('jointSize', (v) => (s.jointSize = v));
+    onNum('jointSize', (v) => {
+      if (!s.jointDepth) s.jointDepth = this.jointDims().depth;
+      s.jointSize = v;
+    });
+    onNum('jointDepth', (v) => (s.jointDepth = v));
     onNum('kerf', (v) => (s.kerf = Math.max(0, v)), false);
     onNum('clearance', (v) => (s.clearance = Math.max(0, v)), false);
     onNum('backers', (v) => (s.backers = Math.max(0, v)), false);
@@ -581,7 +591,10 @@ export class LaserSplitElement extends Base {
     const o = sample.options ?? {};
     const s = this.state;
     if (o.width) s.width = o.width;
-    if (o.joint) s.joint = o.joint;
+    if (o.joint) {
+      s.joint = o.joint;
+      s.jointDepth = 0;
+    }
     if (typeof o.bed === 'string') this.setBed(o.bed);
     if (o.backers !== undefined) s.backers = o.backers;
     this.syncControls();
@@ -619,14 +632,27 @@ export class LaserSplitElement extends Base {
     const info = JOINTS.find((j) => j.id === s.joint);
     const hint = r.querySelector('[data-out=joint]');
     if (hint && info) hint.textContent = info.description;
-    const size = r.querySelector<HTMLInputElement>('[name=jointSize]');
-    const auto = Math.round(
-      Math.min(70, Math.max(12, (Math.min(s.bedW, s.bedH) - 2 * s.margin) * 0.14)),
-    );
-    if (size && skip !== 'jointSize') size.value = String(s.jointSize || auto);
-    const out = r.querySelector('[data-out=size]');
-    if (out) out.textContent = `(${s.jointSize || auto} mm${s.jointSize ? '' : ', auto'})`;
+    const size = r.querySelector<HTMLInputElement>('[name=jointSize]'),
+      depth = r.querySelector<HTMLInputElement>('[name=jointDepth]'),
+      dims = this.jointDims();
+    if (size && skip !== 'jointSize') size.value = String(dims.width);
+    if (depth && skip !== 'jointDepth') depth.value = String(dims.depth);
+    const out = r.querySelector('[data-out=size]'),
+      outDepth = r.querySelector('[data-out=depth]');
+    if (out) out.textContent = `(${dims.width} mm${s.jointSize ? '' : ', auto'})`;
+    if (outDepth) outDepth.textContent = `(${dims.depth} mm${s.jointDepth ? '' : ', auto'})`;
     if (size) size.disabled = info?.kind === 'none';
+    if (depth) depth.disabled = info?.kind === 'none';
+  }
+
+  /** The joint width and depth the next split will use, in whole mm. */
+  private jointDims() {
+    const s = this.state,
+      info = JOINTS.find((j) => j.id === s.joint);
+    const width =
+      s.jointSize ||
+      Math.round(Math.min(70, Math.max(12, (Math.min(s.bedW, s.bedH) - 2 * s.margin) * 0.14)));
+    return { width, depth: Math.round(s.jointDepth || width * (info?.aspect ?? 0)) };
   }
 
   private schedule(resplit: boolean, delay = 160) {

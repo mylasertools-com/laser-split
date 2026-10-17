@@ -128,6 +128,40 @@ test('seams and joints keep clear of engraved text where they can', () => {
   for (const j of overText) assert.equal(j.side, -1, `joint at ${j.center[0].toFixed(0)}`);
 });
 
+test('edge patterns run along every seam, even ones that touch artwork', () => {
+  for (const joint of ['wave', 'zigzag', 'finger', 'scallop']) {
+    const r = splitSvg(example('mountains'), { width: 1000, joint });
+    for (const at of r.seams.x)
+      assert.ok(
+        r.joints.some((j) => j.seam === 'x' && Math.abs(j.center[0] - at) < 1),
+        `${joint} seam at ${at.toFixed(0)}`,
+      );
+  }
+});
+
+test('joint depth is set apart from joint width', () => {
+  for (const joint of ['star', 'arrow']) {
+    const base = splitSvg(rectSvg(1000, 250), {
+      width: 1000,
+      joint,
+      jointSize: 30,
+      jointDepth: 20,
+    });
+    const wide = splitSvg(rectSvg(1000, 250), {
+      width: 1000,
+      joint,
+      jointSize: 50,
+      jointDepth: 20,
+    });
+    assert.ok(base.joints.length > 0 && wide.joints.length > 0);
+    for (const j of wide.joints) assert.equal(j.depth, 20);
+    assert.ok(wide.joints[0].width > base.joints[0].width);
+  }
+  const auto = splitSvg(rectSvg(1000, 250), { width: 1000, joint: 'star', jointSize: 30 });
+  assert.equal(auto.joints[0].depth, 30 * JOINTS.find((j) => j.id === 'star').aspect);
+  assert.throws(() => splitSvg(rectSvg(1000, 250), { width: 1000, jointDepth: 1 }), SplitError);
+});
+
 test('artwork is clipped onto the pieces it falls on', () => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1000mm" height="200mm" viewBox="0 0 1000 200">
     <rect width="1000" height="200" fill="none" stroke="#ff0000"/>
