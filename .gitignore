@@ -1,0 +1,7 @@
+node_modules/
+dist/
+site/
+*.tgz
+.DS_Store
+test-results/
+.scratch/
